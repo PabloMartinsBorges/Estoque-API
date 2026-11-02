@@ -1,0 +1,9 @@
+﻿services:
+  estoque-api:
+    build:
+      context: .
+      dockerfile: Estoque.Api/Dockerfile
+    ports:
+      - "5000:8080"
+    env_file:
+      - .env
