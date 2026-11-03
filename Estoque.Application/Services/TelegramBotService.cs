@@ -55,9 +55,16 @@ namespace Estoque.Application.Services
             // 3. Comando: Marcar falta de um item (Ex: /falta Café)
             if (textoLimpo.StartsWith("/falta ", StringComparison.OrdinalIgnoreCase))
             {
-                var nomeItem = textoLimpo.Substring(10).Trim();
+                var nomeItem = textoLimpo.Substring(7).Trim();
 
                 var produto = await _produtoService.FindByNameAsync(nomeItem);
+
+                if(produto == null)
+                {
+                    await _botClient.SendMessage(chatId, $"❌ Não foi possível encontrar o produto *{nomeItem}* no catálogo.",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                    return;
+                }
 
                 var sucesso = await _produtoService.PatchAsync(produto.Id, new ProdutoPatchDTO { Disponivel = produto.Disponivel });
 
