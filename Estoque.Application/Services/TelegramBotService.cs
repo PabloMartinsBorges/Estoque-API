@@ -66,7 +66,7 @@ namespace Estoque.Application.Services
                     return;
                 }
 
-                var sucesso = await _produtoService.PatchAsync(produto.Id, new ProdutoPatchDTO { Disponivel = produto.Disponivel });
+                var sucesso = await _produtoService.PatchAsync(produto.Id, new ProdutoPatchDTO { Disponivel = false });
 
                 if (sucesso != null)
                 {
