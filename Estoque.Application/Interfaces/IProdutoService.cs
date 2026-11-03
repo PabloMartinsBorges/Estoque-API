@@ -17,5 +17,7 @@ namespace Estoque.Application.Interfaces
 
         public Task<List<ProdutoGetDTO>> GetProdutosFaltaAsync();
 
+        public Task<ProdutoGetDTO> FindByNameAsync(string nome);
+
     }
 }

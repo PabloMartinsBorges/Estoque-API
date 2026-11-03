@@ -24,6 +24,11 @@ namespace Estoque.Infra.Data.Repositories
            return produto;
         }
 
+        public Task<Produto> FindByNameAsync(string nome)
+        {
+            return _context.Produtos.FirstOrDefaultAsync(p => p.Nome == nome);
+        }
+
         public async Task<List<Produto>> GetAllAsync()
         {
             return await _context.Produtos.ToListAsync();

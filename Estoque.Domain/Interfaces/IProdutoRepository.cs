@@ -15,6 +15,6 @@ namespace Estoque.Domain.Interfaces
 
         Task<Produto> UpdateAsync(Produto produto);
 
-       
+       Task<Produto> FindByNameAsync(string nome);
     }
 }

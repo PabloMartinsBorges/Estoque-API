@@ -78,6 +78,12 @@ namespace Estoque.Application.Services
         public async Task<ProdutoGetDTO> PatchAsync(int id, ProdutoPatchDTO produtoPatchDTO)
         { 
             var produto = await produtoRepository.GetByIdAsync(id);
+
+            if (produto == null)
+            {
+                return null; // Produto não encontrado
+            }
+
             produto.Disponivel = produtoPatchDTO.Disponivel;
             if(!produto.Disponivel)
             {
@@ -115,6 +121,22 @@ namespace Estoque.Application.Services
                 DataRegistro = p.DataRegistro,
                 DataRegistroFalta = p.DataRegistroFalta // Include the date when the product goes out of stock
             }).ToList();
+        }
+
+        public async Task<ProdutoGetDTO> FindByNameAsync(string nome)
+        {
+            var produto = await produtoRepository.FindByNameAsync(nome);
+            if (produto == null)
+                return null;
+
+            return new ProdutoGetDTO
+            {
+                Id = produto.Id,
+                Nome = produto.Nome,
+                Disponivel = produto.Disponivel,
+                DataRegistro = produto.DataRegistro,
+                DataRegistroFalta = produto.DataRegistroFalta
+            };
         }
     }
 }
