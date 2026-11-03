@@ -9,12 +9,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# 1. Copia todos os .csproj para resolver as dependências
+# 1. Copia todos os .csproj para resolver as dependências.
 COPY ["Estoque.Api/Estoque.Api.csproj", "Estoque.Api/"]
 COPY ["Estoque.Application/Estoque.Application.csproj", "Estoque.Application/"]
 COPY ["Estoque.Domain/Estoque.Domain.csproj", "Estoque.Domain/"]
 COPY ["Estoque.Infra.Data/Estoque.Infra.Data.csproj", "Estoque.Infra.Data/"]
-COPY ["Estoque.Infra.IoC/Estoque.Infra.IoC.csproj", "Estoque.Infra.IoC/"]
+COPY ["Estoque.Infra.IoC/Estoque.Infra.Ioc.csproj", "Estoque.Infra.Ioc/"]
 
 # 2. Restaura as dependências com base nos projetos
 RUN dotnet restore "Estoque.Api/Estoque.Api.csproj"
