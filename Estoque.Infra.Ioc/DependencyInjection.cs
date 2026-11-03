@@ -27,7 +27,8 @@ namespace Estoque.Infra.Ioc
 
             services.AddScoped<IProdutoRepository, ProdutoRepository>();
             services.AddScoped<IProdutoService, ProdutoService>();
-
+            services.AddScoped<ITelegramBotService, TelegramBotService>();
+       
             return services;
         }
     }
