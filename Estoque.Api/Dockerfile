@@ -14,7 +14,7 @@ COPY ["Estoque.Api/Estoque.Api.csproj", "Estoque.Api/"]
 COPY ["Estoque.Application/Estoque.Application.csproj", "Estoque.Application/"]
 COPY ["Estoque.Domain/Estoque.Domain.csproj", "Estoque.Domain/"]
 COPY ["Estoque.Infra.Data/Estoque.Infra.Data.csproj", "Estoque.Infra.Data/"]
-COPY ["Estoque.Infra.IoC/Estoque.Infra.Ioc.csproj", "Estoque.Infra.Ioc/"]
+COPY ["Estoque.Infra.Ioc/Estoque.Infra.Ioc.csproj", "Estoque.Infra.Ioc/"]
 
 # 2. Restaura as dependências com base nos projetos
 RUN dotnet restore "Estoque.Api/Estoque.Api.csproj"
