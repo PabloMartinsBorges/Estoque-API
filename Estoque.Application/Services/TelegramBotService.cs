@@ -90,10 +90,13 @@ namespace Estoque.Application.Services
                     await _botClient.SendMessage(chatId, "📦 Nenhum produto cadastrado no estoque.");
                     return;
                 }
-
-                var resposta = "📦 *Produtos no Estoque:*\n\n" +
+                else
+                { 
+                    var resposta = "📦 *Produtos no Estoque:*\n\n" +
                                string.Join("\n", produtos.Select(p => $"• {p.Nome} - {(p.Disponivel ? "Disponível" : "Indisponível")}"));
-                await _botClient.SendMessage(chatId, resposta, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                    await _botClient.SendMessage(chatId, resposta, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                }
+                return;
             }
 
             if(textoLimpo.StartsWith("/adicionar ", StringComparison.OrdinalIgnoreCase))
@@ -111,6 +114,7 @@ namespace Estoque.Application.Services
                     await _botClient.SendMessage(chatId, $"❌ Não foi possível adicionar o produto *{nomeItem}* ao estoque.",
                         parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
                 }
+                return;
             }
            
 
