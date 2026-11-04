@@ -30,47 +30,43 @@ public class TelegramBotService : ITelegramBotService
         var textoLimpo = mensagem.Trim();
         var cacheKey = $"{EstadoCachePrefix}{chatId}";
 
-        // 1. Verifica se o usuário estava aguardando preencher alguma pergunta anterior
+        // 1. Verifica se o usuário estava aguardando responder a uma pergunta anterior
         if (_cache.TryGetValue(cacheKey, out string? estadoAtual))
         {
             if (estadoAtual == "AGUARDANDO_NOME_FALTA")
             {
-                // Limpa o estado para não ficar preso no fluxo
                 _cache.Remove(cacheKey);
-
                 await TratarRegistroFaltaPorNomeAsync(chatId, textoLimpo);
                 return;
             }
 
             if (estadoAtual == "AGUARDANDO_NOME_ADICIONAR")
             {
-                // Limpa o estado para não ficar preso no fluxo
                 _cache.Remove(cacheKey);
-                var produto = await _produtoService.FindByNameAsync(textoLimpo);
-
                 await TratarAdicionarProdutoAsync(chatId, textoLimpo);
                 return;
             }
-
-            // 2. Comandos diretos de texto
-            if (textoLimpo.Equals("/start", StringComparison.OrdinalIgnoreCase) ||
-                textoLimpo.Equals("/menu", StringComparison.OrdinalIgnoreCase))
-            {
-                await EnviarMenuPrincipalAsync(chatId);
-                return;
-            }
-
-            if (textoLimpo.Equals("/faltantes", StringComparison.OrdinalIgnoreCase))
-            {
-                await EnviarListaFaltantesAsync(chatId);
-                return;
-            }
-
-            // Mensagem padrão caso não esteja em nenhum estado e não seja comando
-            await _botClient.SendMessage(chatId,
-                "Comando não reconhecido. Use o menu abaixo:",
-                replyMarkup: ObterTecladoMenu());
         }
+
+        // 2. Comandos diretos de texto (agora executam mesmo se o cache estiver vazio)
+        if (textoLimpo.Equals("/start", StringComparison.OrdinalIgnoreCase) ||
+            textoLimpo.Equals("/menu", StringComparison.OrdinalIgnoreCase))
+        {
+            await EnviarMenuPrincipalAsync(chatId);
+            return;
+        }
+
+        if (textoLimpo.Equals("/faltantes", StringComparison.OrdinalIgnoreCase))
+        {
+            await EnviarListaFaltantesAsync(chatId);
+            return;
+        }
+
+        // 3. Mensagem padrão caso o texto não seja um comando conhecido
+        await _botClient.SendMessage(
+            chatId: chatId,
+            text: "Comando não reconhecido. Use o menu abaixo:",
+            replyMarkup: ObterTecladoMenu());
     }
 
     public async Task ProcessarCallbackAsync(CallbackQuery callbackQuery)
