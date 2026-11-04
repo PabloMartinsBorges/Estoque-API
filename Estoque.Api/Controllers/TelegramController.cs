@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Estoque.Api.Controllers;
 
@@ -20,8 +21,8 @@ public class TelegramController : ControllerBase
 
     [HttpPost("webhook")]
     public async Task<IActionResult> Post(
-        [FromHeader(Name = "X-Telegram-Bot-Api-Secret-Token")] string? secretToken,
-        [FromBody] Update update)
+    [FromHeader(Name = "X-Telegram-Bot-Api-Secret-Token")] string? secretToken,
+    [FromBody] Update update)
     {
         var expectedToken = _configuration["Telegram:SecretToken"];
         if (!string.IsNullOrEmpty(expectedToken) && secretToken != expectedToken)
@@ -29,9 +30,18 @@ public class TelegramController : ControllerBase
             return Forbid();
         }
 
+        // 1. Trata clique nos botões (Inline Keyboards)
+        if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery != null)
+        {
+            await _telegramBotService.ProcessarCallbackAsync(update.CallbackQuery);
+            return Ok();
+        }
+
+        // 2. Trata mensagens de texto enviadas pelo usuário
         if (update.Message is { Text: { } messageText } message)
         {
             await _telegramBotService.ProcessarMensagemAsync(message.Chat.Id, messageText);
+            return Ok();
         }
 
         return Ok();
