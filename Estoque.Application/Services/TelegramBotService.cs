@@ -55,7 +55,7 @@ namespace Estoque.Application.Services
             // 3. Comando: Marcar falta de um item (Ex: /falta Café)
             if (textoLimpo.StartsWith("/falta ", StringComparison.OrdinalIgnoreCase))
             {
-                var nomeItem = textoLimpo.Substring(7).Trim();
+                var nomeItem = textoLimpo.Substring(7).Trim().ToLower();
 
                 var produto = await _produtoService.FindByNameAsync(nomeItem);
 
@@ -80,6 +80,40 @@ namespace Estoque.Application.Services
                 }
                 return;
             }
+
+
+            if(textoLimpo.Equals("/listar", StringComparison.OrdinalIgnoreCase))
+            {
+                var produtos = await _produtoService.GetAllAsync();
+                if(produtos == null || !produtos.Any())
+                {
+                    await _botClient.SendMessage(chatId, "📦 Nenhum produto cadastrado no estoque.");
+                    return;
+                }
+
+                var resposta = "📦 *Produtos no Estoque:*\n\n" +
+                               string.Join("\n", produtos.Select(p => $"• {p.Nome} - {(p.Disponivel ? "Disponível" : "Indisponível")}"));
+                await _botClient.SendMessage(chatId, resposta, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+            }
+
+            if(textoLimpo.StartsWith("/adicionar ", StringComparison.OrdinalIgnoreCase))
+            {
+                var nomeItem = textoLimpo.Substring(11).Trim().ToLower();
+                var produtoPostDTO = new ProdutoPostDTO { Nome = nomeItem };
+                var createdProduto = await _produtoService.AddAsync(produtoPostDTO);
+                if (createdProduto != null)
+                {
+                    await _botClient.SendMessage(chatId, $"✅ O item *{nomeItem}* foi adicionado ao estoque.",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                }
+                else
+                {
+                    await _botClient.SendMessage(chatId, $"❌ Não foi possível adicionar o produto *{nomeItem}* ao estoque.",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                }
+            }
+           
+
 
             // 4. Mensagem não reconhecida
             await _botClient.SendMessage(chatId, "Não entendi o comando. Digite `/start` para ver as opções.");
