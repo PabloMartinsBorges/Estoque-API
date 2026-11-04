@@ -41,26 +41,36 @@ public class TelegramBotService : ITelegramBotService
                 await TratarRegistroFaltaPorNomeAsync(chatId, textoLimpo);
                 return;
             }
-        }
 
-        // 2. Comandos diretos de texto
-        if (textoLimpo.Equals("/start", StringComparison.OrdinalIgnoreCase) ||
-            textoLimpo.Equals("/menu", StringComparison.OrdinalIgnoreCase))
-        {
-            await EnviarMenuPrincipalAsync(chatId);
-            return;
-        }
+            if (estadoAtual == "AGUARDANDO_NOME_ADICIONAR")
+            {
+                // Limpa o estado para não ficar preso no fluxo
+                _cache.Remove(cacheKey);
+                var produto = await _produtoService.FindByNameAsync(textoLimpo);
 
-        if (textoLimpo.Equals("/faltantes", StringComparison.OrdinalIgnoreCase))
-        {
-            await EnviarListaFaltantesAsync(chatId);
-            return;
-        }
+                await TratarAdicionarProdutoAsync(chatId, textoLimpo);
+                return;
+            }
 
-        // Mensagem padrão caso não esteja em nenhum estado e não seja comando
-        await _botClient.SendMessage(chatId,
-            "Comando não reconhecido. Use o menu abaixo:",
-            replyMarkup: ObterTecladoMenu());
+            // 2. Comandos diretos de texto
+            if (textoLimpo.Equals("/start", StringComparison.OrdinalIgnoreCase) ||
+                textoLimpo.Equals("/menu", StringComparison.OrdinalIgnoreCase))
+            {
+                await EnviarMenuPrincipalAsync(chatId);
+                return;
+            }
+
+            if (textoLimpo.Equals("/faltantes", StringComparison.OrdinalIgnoreCase))
+            {
+                await EnviarListaFaltantesAsync(chatId);
+                return;
+            }
+
+            // Mensagem padrão caso não esteja em nenhum estado e não seja comando
+            await _botClient.SendMessage(chatId,
+                "Comando não reconhecido. Use o menu abaixo:",
+                replyMarkup: ObterTecladoMenu());
+        }
     }
 
     public async Task ProcessarCallbackAsync(CallbackQuery callbackQuery)
@@ -88,6 +98,14 @@ public class TelegramBotService : ITelegramBotService
                     parseMode: ParseMode.Markdown);
                 break;
 
+            case "menu_adicionar":
+                _cache.Set($"{EstadoCachePrefix}{chatId}", "AGUARDANDO_NOME_ADICIONAR", TimeSpan.FromMinutes(5));
+
+                await _botClient.SendMessage(chatId,
+                    "✍️ Digite o *nome do produto* que deseja adicionar:",
+                    parseMode: ParseMode.Markdown);
+                break;
+
             case "menu_ajuda":
                 await _botClient.SendMessage(chatId,
                     "💡 *Dicas do Sistema:*\n• Use os botões para navegar.\n• Se preferir texto, digite `/faltantes` a qualquer momento.",
@@ -112,11 +130,12 @@ public class TelegramBotService : ITelegramBotService
         {
             new[]
             {
-                InlineKeyboardButton.WithCallbackData("📋 Ver Faltantes (48h)", "menu_faltantes"),
+                InlineKeyboardButton.WithCallbackData("📋 Ver Faltantes (2 Dias)", "menu_faltantes"),
                 InlineKeyboardButton.WithCallbackData("🔴 Registrar Falta", "menu_registrar_falta")
             },
             new[]
             {
+                InlineKeyboardButton.WithCallbackData("➕ Adicionar Item", "menu_adicionar"),
                 InlineKeyboardButton.WithCallbackData("ℹ️ Ajuda", "menu_ajuda")
             }
         });
@@ -170,4 +189,32 @@ public class TelegramBotService : ITelegramBotService
                 replyMarkup: ObterTecladoMenu());
         }
     }
+
+    private async Task TratarAdicionarProdutoAsync(long chatId, string nomeItem)
+    {
+        var produtoExistente = await _produtoService.FindByNameAsync(nomeItem);
+        if (produtoExistente != null)
+        {
+            await _botClient.SendMessage(chatId,
+                $"⚠️ O produto *{nomeItem}* já existe no catálogo.",
+                parseMode: ParseMode.Markdown,
+                replyMarkup: ObterTecladoMenu());
+            return;
+        }
+        var produtoPostDto = new ProdutoPostDTO { Nome = nomeItem };
+        var criado = await _produtoService.AddAsync(produtoPostDto);
+        if (criado != null)
+        {
+            await _botClient.SendMessage(chatId,
+                $"✅ O item *{criado.Nome}* foi adicionado ao estoque com sucesso!",
+                parseMode: ParseMode.Markdown,
+                replyMarkup: ObterTecladoMenu());
+        }
+        else
+        {
+            await _botClient.SendMessage(chatId,
+                $"⚠️ Ocorreu um erro ao adicionar o item *{nomeItem}*.",
+                replyMarkup: ObterTecladoMenu());
+        }
+    }   
 }
