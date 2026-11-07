@@ -1,4 +1,5 @@
 ﻿using Estoque.Api.Erros;
+using Estoque.Application.Exceptions;
 
 namespace Estoque.Api.Middlewares
 {
