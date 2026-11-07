@@ -1,4 +1,4 @@
-﻿namespace Estoque.Api.Erros
+﻿namespace Estoque.Application.Exceptions
 {
     public class NotFoundException: Exception
     {

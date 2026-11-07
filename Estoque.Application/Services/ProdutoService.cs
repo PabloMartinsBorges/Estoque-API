@@ -1,4 +1,5 @@
 ﻿using Estoque.Application.DTOs.Produto;
+using Estoque.Application.Exceptions;
 using Estoque.Application.Interfaces;
 using Estoque.Domain.Entities;
 using Estoque.Domain.Interfaces;
@@ -28,6 +29,12 @@ namespace Estoque.Application.Services
             };
 
             var createdProduto = await produtoRepository.AddAsync(produto);
+
+            if(createdProduto ==null)
+            {
+                throw new BadRequestException("Erro ao criar o produto.");
+            }
+
             return new ProdutoGetDTO
             {
                 Id = createdProduto.Id,
@@ -51,7 +58,12 @@ namespace Estoque.Application.Services
         public async Task<ProdutoGetDTO> GetByIdAsync(int id)
         {
             var produto = await produtoRepository.GetByIdAsync(id);
-            return new ProdutoGetDTO
+            if (produto == null)
+            {
+                throw new NotFoundException("Produto não encontrado.");
+            }
+        
+                return new ProdutoGetDTO
             {
                 Id = produto.Id,
                 Nome = produto.Nome,
@@ -127,7 +139,7 @@ namespace Estoque.Application.Services
         {
             var produto = await produtoRepository.FindByNameAsync(nome);
             if (produto == null)
-                return null;
+                throw new NotFoundException($"Produto com nome '{nome}' não encontrado.");
 
             return new ProdutoGetDTO
             {
