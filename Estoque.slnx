@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Testes/">
+    <Project Path="IntegrationTests/IntegrationTests.csproj" Id="0b8a7138-43eb-4b14-a50c-ba8bd26d1ed3" />
+    <Project Path="UnitTests/UnitTests.csproj" Id="ac0030dc-5e9c-46d5-955b-f7f628a18a7f" />
+  </Folder>
   <Project Path="Estoque.Api/Estoque.Api.csproj" />
   <Project Path="Estoque.Application/Estoque.Application.csproj" />
   <Project Path="Estoque.Domain/Estoque.Domain.csproj" />

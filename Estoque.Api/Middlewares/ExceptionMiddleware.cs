@@ -38,7 +38,7 @@ namespace Estoque.Api.Middlewares
                 httpContext.Response.StatusCode = statusCode;
                 var response = _env.IsDevelopment()
                     ? new ApiException(statusCode.ToString(), ex.Message, ex.StackTrace?.ToString())
-                    : new ApiException(statusCode.ToString(), ex.Message, null);
+                    : new ApiException(statusCode.ToString(), ex.Message, "Internal Server Error");
 
                 //options to serialize the response object to JSON with camelCase property naming
                 var options = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };

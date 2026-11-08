@@ -69,7 +69,6 @@ namespace Estoque.Api.Controllers
         {
             var produtos = await _produtoService.GetProdutosFaltaAsync();
 
-            if (produtos == null) return BadRequest("Erro ao buscar produtos.");
             return Ok(produtos);
         }       
     }
