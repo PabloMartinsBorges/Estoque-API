@@ -64,7 +64,7 @@ namespace Estoque.Api.Controllers
             return Ok(new { message = "Disponibilidade do produto atualizada com sucesso." });
         }
 
-        [HttpGet("/listar-falta")]
+        [HttpGet("listar-falta")]
         public async Task<ActionResult> GetProdutosFalta()
         {
             var produtos = await _produtoService.GetProdutosFaltaAsync();

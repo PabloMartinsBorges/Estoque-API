@@ -27,7 +27,7 @@ public class TelegramController : ControllerBase
         var expectedToken = _configuration["Telegram:SecretToken"];
         if (!string.IsNullOrEmpty(expectedToken) && secretToken != expectedToken)
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Secret Token inválido ou ausente." });
         }
 
         // 1. Trata clique nos botões (Inline Keyboards)
