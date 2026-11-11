@@ -1,5 +1,7 @@
 # Visao Geral da Arquitetura do Sistema de Estoque
 
+![Diagrama_Modulos_Estoque](img/modulos_Estoque_final.png)
+
 ```text
 Estoque/
 ├── src/
@@ -17,6 +19,27 @@ Estoque/
 # Estoque API
 
 A **Estoque API** e um servico backend desenvolvido em **.NET** orientado aos principios da **Clean Architecture**, responsavel pelo gerenciamento do catalogo de produtos, controle de itens em falta e integracao em tempo real com bot do Telegram para notificacoes e comandos operacionais.
+
+---
+
+## Indice
+
+- [Visao Geral da Arquitetura](#visao-geral-da-arquitetura-do-sistema-de-estoque)
+- [Requisitos](#requisitos)
+- [Instalacao](#instalacao)
+- [Inicializacao do Banco de Dados (EF Core Migrations)](#inicializacao-do-banco-de-dados-ef-core-migrations)
+- [Executando a API](#executando-a-api)
+- [Documentacao dos Endpoints (Swagger)](#documentacao-dos-endpoints-swagger)
+  - [1. Cadastro de Produto (`POST /api/Produto`)](#1-cadastro-de-produto-post-apiproduto)
+  - [2. Consulta de Produto por Identificador (`GET /api/Produto/{id:int}`)](#2-consulta-de-produto-por-identificador-get-apiprodutoidint)
+  - [3. Listagem de Produtos em Falta (`GET /api/Produto/listar-falta`)](#3-listagem-de-produtos-em-falta-get-apiprodutolistar-falta)
+  - [4. Atualizacao de Disponibilidade (`PATCH /api/Produto/{id:int}`)](#4-atualizacao-de-disponibilidade-patch-apiprodutoidint)
+  - [5. Webhook do Bot do Telegram (`POST /api/telegram/webhook`)](#5-webhook-do-bot-do-telegram-post-apitelegramwebhook)
+- [Execucao dos Testes](#execucao-dos-testes)
+  - [1. Testes Unitarios](#1-testes-unitarios)
+  - [2. Testes de Integracao](#2-testes-de-integracao)
+  - [3. Execucao Consolidada](#3-execucao-consolidada)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -101,6 +124,59 @@ O esquema de tabelas e o versionamento estrutural sao gerenciados via Entity Fra
 
 2. Acesse a documentacao interativa OpenAPI / Swagger (em ambiente de desenvolvimento):
    - **Swagger UI:** [http://localhost:5000/swagger](http://localhost:5000/swagger) ou [https://localhost:7001/swagger](https://localhost:7001/swagger)
+
+---
+
+## Documentacao dos Endpoints (Swagger)
+
+![Interface Interativa do Swagger](img/endpoints_swagger.png)
+
+A API disponibiliza endpoints organizados por responsabilidade, cobrindo o gerenciamento do catalogo de produtos e a recepcao de eventos externos via Webhook:
+
+### 1. Cadastro de Produto (`POST /api/Produto`)
+* **Descricao:** Insere um novo produto no catalogo do estoque.
+* **Corpo da Requisicao (`ProdutoPostDTO`):**
+  ```json
+  {
+    "nome": "Farinha de Trigo Especial 1kg"
+  }
+  ```
+* **Comportamento Esperado:**
+  * **200 OK:** Retorna a confirmacao de persistencia com o objeto `{ "message": "Produto criado com sucesso." }`.
+  * **400 Bad Request:** Retornado caso o payload seja invalido ou o servico falhe na persistencia do registro.
+
+### 2. Consulta de Produto por Identificador (`GET /api/Produto/{id:int}`)
+* **Descricao:** Localiza um produto cadastrado com base em sua chave primaria numerica.
+* **Comportamento Esperado:**
+  * **200 OK:** Retorna o objeto `ProdutoGetDTO` contendo `id`, `nome`, status booleano `disponivel`, `dataRegistro` e `dataRegistroFalta`.
+  * **404 Not Found:** Disparado pelo middleware customizado quando o produto nao e localizado no banco de dados, retornando o objeto no padrao RFC 7807 (`statusCode`, `message`, `details`).
+
+### 3. Listagem de Produtos em Falta (`GET /api/Produto/listar-falta`)
+* **Descricao:** Consulta e filtra os itens atualmente marcados como indisponiveis cuja ocorrencia de falta tenha sido registrada na janela temporal das ultimas 48 horas.
+* **Comportamento Esperado:**
+  * **200 OK:** Retorna uma colecao de objetos `ProdutoGetDTO` compativeis com o filtro temporal.
+  * **400 Bad Request:** Retornado caso nao haja registros de itens em falta dentro do periodo estipulado.
+
+### 4. Atualizacao de Disponibilidade (`PATCH /api/Produto/{id:int}`)
+* **Descricao:** Altera o status operacional de estoque de um item (disponivel ou em falta).
+* **Corpo da Requisicao (`ProdutoPatchDTO`):**
+  ```json
+  {
+    "disponivel": false
+  }
+  ```
+* **Comportamento Esperado:**
+  * **200 OK:** Retorna o registro do produto atualizado. Caso `disponivel` receba `false`, o campo `dataRegistroFalta` e preenchido automaticamente com o carimbo de data/hora atual (UTC).
+  * **404 Not Found:** Retornado caso o identificador do produto nao exista na base de dados.
+
+### 5. Webhook do Bot do Telegram (`POST /api/telegram/webhook`)
+* **Descricao:** Ponto de entrada de comunicacao assincrona acionado exclusivamente pelos servidores do Telegram para notificacao de interacoes no chat.
+* **Cabecalho Obrigatorio:** `X-Telegram-Bot-Api-Secret-Token` contendo o valor configurado na aplicacao.
+* **Corpo da Requisicao:** Objeto de evento padrao do Telegram (`Update`).
+* **Comportamento Esperado:**
+  * **200 OK:** Requisicao autenticada e evento encaminhado com sucesso para processamento interno de comandos de texto (como `/falta`) ou respostas de botoes interativos (*inline keyboards*).
+  * **403 Forbidden:** Retornado imediatamente quando o cabecalho de segredo estiver ausente ou divergir do token esperado.
+
 
 ---
 
